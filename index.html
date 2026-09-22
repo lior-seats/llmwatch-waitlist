@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLMWatch — Know exactly which feature is burning your LLM budget</title>
+  <meta name="description" content="LLMWatch monitors per-feature, per-endpoint LLM API spend for OpenAI and Anthropic. See which feature is driving your bill before the invoice arrives.">
+  <meta property="og:title" content="LLMWatch — Per-feature LLM cost attribution">
+  <meta property="og:description" content="Finally see which feature, endpoint, or user is responsible for your OpenAI and Anthropic API spend.">
+  <meta property="og:url" content="https://lior-seats.github.io/llmwatch-waitlist/">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="LLMWatch — Per-feature LLM cost attribution">
+  <meta name="twitter:description" content="See which feature is burning your LLM budget. Real-time attribution for OpenAI and Anthropic APIs.">
+  <link rel="canonical" href="https://lior-seats.github.io/llmwatch-waitlist/">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0f; color: #e2e8f0; line-height: 1.6; }
+    a { color: #a78bfa; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .container { max-width: 680px; margin: 0 auto; padding: 0 1.5rem; }
+    /* Hero */
+    .hero { background: linear-gradient(160deg, #0d0d1a 0%, #1a1030 50%, #0d0d1a 100%); padding: 5rem 1.5rem 4rem; text-align: center; border-bottom: 1px solid #1e1e3a; }
+    .eyebrow { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #7c3aed; margin-bottom: 1.25rem; }
+    .hero h1 { font-size: 2.6rem; font-weight: 800; line-height: 1.2; color: #f7fafc; margin-bottom: 1.25rem; max-width: 600px; margin-left: auto; margin-right: auto; }
+    .hero h1 em { font-style: normal; color: #a78bfa; }
+    .hero p { font-size: 1.1rem; color: #94a3b8; margin-bottom: 2.5rem; max-width: 520px; margin-left: auto; margin-right: auto; }
+    .form-box { max-width: 440px; margin: 0 auto; }
+    .form-row { display: flex; gap: 0.5rem; }
+    .form-row input[type="email"] { flex: 1; background: #1a1030; border: 1px solid #3b1d6b; color: #f7fafc; border-radius: 7px; padding: 0.75rem 1rem; font-size: 0.95rem; outline: none; transition: border-color 0.15s; }
+    .form-row input::placeholder { color: #64748b; }
+    .form-row input:focus { border-color: #7c3aed; }
+    .form-row button { background: #7c3aed; color: #fff; border: none; padding: 0.75rem 1.5rem; border-radius: 7px; font-weight: 700; font-size: 0.95rem; cursor: pointer; white-space: nowrap; transition: background 0.15s; }
+    .form-row button:hover { background: #6d28d9; }
+    .form-note { font-size: 0.8rem; color: #475569; margin-top: 0.75rem; text-align: center; }
+    .form-msg { font-size: 0.88rem; margin-top: 0.5rem; text-align: center; min-height: 1.2rem; }
+    /* Pain section */
+    .pain { padding: 4rem 1.5rem; background: #0d0d1a; border-bottom: 1px solid #1e1e3a; }
+    .pain .container { max-width: 700px; }
+    .pain-scenario { background: #12122a; border: 1px solid #1e1e3a; border-radius: 10px; padding: 1.75rem; font-family: 'SFMono-Regular', Consolas, monospace; font-size: 0.85rem; color: #94a3b8; margin: 2rem 0; line-height: 1.8; }
+    .pain-scenario .label { font-family: inherit; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #475569; margin-bottom: 0.5rem; }
+    .pain-scenario .line { padding: 0.1rem 0; }
+    .pain-scenario .line.bad { color: #f87171; }
+    .pain-scenario .line.good { color: #34d399; }
+    /* Features */
+    .features { padding: 4rem 1.5rem; border-bottom: 1px solid #1e1e3a; }
+    .features h2 { font-size: 1.5rem; font-weight: 700; color: #f7fafc; margin-bottom: 2.5rem; text-align: center; }
+    .feature-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 600px) { .feature-grid { grid-template-columns: 1fr; } .hero h1 { font-size: 2rem; } }
+    .feature { background: #12122a; border: 1px solid #1e1e3a; border-radius: 10px; padding: 1.5rem; }
+    .feature .icon { font-size: 1.5rem; margin-bottom: 0.75rem; }
+    .feature h3 { font-size: 0.95rem; font-weight: 700; color: #f7fafc; margin-bottom: 0.4rem; }
+    .feature p { font-size: 0.85rem; color: #64748b; line-height: 1.6; }
+    /* SDK snippet */
+    .sdk { padding: 4rem 1.5rem; background: #0d0d1a; border-bottom: 1px solid #1e1e3a; text-align: center; }
+    .sdk h2 { font-size: 1.4rem; font-weight: 700; color: #f7fafc; margin-bottom: 1rem; }
+    .sdk p { color: #94a3b8; margin-bottom: 2rem; font-size: 0.95rem; }
+    .sdk pre { background: #12122a; border: 1px solid #1e1e3a; border-radius: 8px; padding: 1.5rem; font-family: 'SFMono-Regular', Consolas, monospace; font-size: 0.85rem; text-align: left; overflow-x: auto; margin: 0 auto; max-width: 560px; }
+    .sdk pre .kw { color: #c084fc; }
+    .sdk pre .fn { color: #60a5fa; }
+    .sdk pre .str { color: #34d399; }
+    .sdk pre .cm { color: #475569; }
+    /* Pricing */
+    .pricing { padding: 4rem 1.5rem; border-bottom: 1px solid #1e1e3a; text-align: center; }
+    .pricing h2 { font-size: 1.4rem; font-weight: 700; color: #f7fafc; margin-bottom: 0.5rem; }
+    .pricing p { color: #94a3b8; margin-bottom: 2rem; }
+    .price-tag { font-size: 3rem; font-weight: 800; color: #a78bfa; }
+    .price-sub { color: #64748b; font-size: 0.9rem; margin-top: 0.25rem; }
+    /* Bottom CTA */
+    .bottom-cta { padding: 4rem 1.5rem; text-align: center; background: linear-gradient(160deg, #0d0d1a 0%, #1a1030 100%); }
+    .bottom-cta h2 { font-size: 1.5rem; font-weight: 700; color: #f7fafc; margin-bottom: 1rem; }
+    footer { text-align: center; padding: 2rem 1.5rem; color: #334155; font-size: 0.82rem; border-top: 1px solid #0d0d1a; }
+  </style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="container">
+    <div class="eyebrow">LLMWatch</div>
+    <h1>Know exactly <em>which feature</em> is burning your LLM budget</h1>
+    <p>LLMWatch instruments your OpenAI and Anthropic calls to show per-feature, per-endpoint, and per-user cost breakdowns in real time. One-line SDK. No proxy required.</p>
+
+    <div class="form-box">
+      <form onsubmit="submitWaitlist(event)" id="hero-form">
+        <div class="form-row">
+          <input type="email" name="email" placeholder="you@yourcompany.com" required>
+          <button type="submit" id="hero-btn">Join waitlist →</button>
+        </div>
+        <div class="form-msg" id="hero-msg"></div>
+        <div class="form-note">No credit card. No spam. Notify me when it launches.</div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Pain scenario -->
+<div class="pain">
+  <div class="container">
+    <h2 style="font-size:1.4rem;font-weight:700;color:#f7fafc;text-align:center;margin-bottom:1.5rem">The $2,000 OpenAI invoice problem</h2>
+    <p style="text-align:center;color:#64748b;margin-bottom:1.5rem;font-size:0.95rem">It's the 3rd of the month. Your OpenAI bill landed. It's $2,300. Up from $1,100 last month.</p>
+
+    <div class="pain-scenario">
+      <div class="label">Without LLMWatch</div>
+      <div class="line bad">❌ "Our OpenAI bill doubled. Why?"</div>
+      <div class="line bad">❌ Check billing dashboard → shows total: $2,300</div>
+      <div class="line bad">❌ No feature breakdown. No user breakdown. No timeline.</div>
+      <div class="line bad">❌ Spend 3 hours adding console.log() everywhere</div>
+      <div class="line bad">❌ Discover it was the new AI search feature. 6 days after launch.</div>
+    </div>
+
+    <div class="pain-scenario">
+      <div class="label">With LLMWatch</div>
+      <div class="line good">✅ Real-time: "ai-search: $890 this month (+120%)"</div>
+      <div class="line good">✅ Alert fires day 2: "ai-search exceeded $50/day threshold"</div>
+      <div class="line good">✅ See: average tokens per call spiked from 400 → 1,200</div>
+      <div class="line good">✅ Fix prompt. Cost drops. Invoice back to normal.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Features -->
+<div class="features">
+  <div class="container">
+    <h2>Everything you need to stop LLM bill shock</h2>
+    <div class="feature-grid">
+      <div class="feature">
+        <div class="icon">🔍</div>
+        <h3>Per-feature cost breakdown</h3>
+        <p>"The AI search box costs $400/mo. The summarizer costs $12." See it instantly.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">🚨</div>
+        <h3>Real-time spend alerts</h3>
+        <p>Get notified the moment any endpoint's daily spend exceeds your threshold — not at invoice time.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">🔧</div>
+        <h3>One-line SDK</h3>
+        <p>Wrap your existing OpenAI or Anthropic client. No proxy, no configuration, no infrastructure change.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">👤</div>
+        <h3>Per-user attribution</h3>
+        <p>Pass a userId and see which users are burning the most tokens. Essential for usage-based pricing.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">📈</div>
+        <h3>Trend detection</h3>
+        <p>Automatically flags when a feature's cost per call increases — catches prompt bloat and token leaks.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">🔒</div>
+        <h3>No data retention</h3>
+        <p>LLMWatch logs metadata only — token counts, timestamps, feature labels. Your prompt content never leaves your app.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SDK snippet -->
+<div class="sdk">
+  <div class="container">
+    <h2>Two lines to instrument your app</h2>
+    <p>Wrap your existing OpenAI client. Every call is automatically tracked.</p>
+    <pre><span class="kw">import</span> { <span class="fn">wrap</span> } <span class="kw">from</span> <span class="str">'llmwatch'</span>  <span class="cm">// npm install llmwatch</span>
+
+<span class="kw">const</span> openai = <span class="fn">wrap</span>(<span class="kw">new</span> OpenAI(), {
+  apiKey: <span class="str">'lw_...'</span>,
+  feature: <span class="str">'ai-search'</span>  <span class="cm">// label this call group</span>
+})
+
+<span class="cm">// Everything else is unchanged — normal OpenAI SDK</span>
+<span class="kw">const</span> response = <span class="kw">await</span> openai.chat.completions.<span class="fn">create</span>({ ... })</pre>
+  </div>
+</div>
+
+<!-- Pricing -->
+<div class="pricing">
+  <div class="container">
+    <h2>Simple pricing</h2>
+    <p>No per-seat, no per-call fees. One flat rate.</p>
+    <div class="price-tag">$19<span style="font-size:1.5rem;color:#64748b">/mo</span></div>
+    <div class="price-sub">Indie developers & small teams · Unlimited features · Unlimited calls</div>
+    <p style="color:#475569;font-size:0.85rem;margin-top:1rem">Early access pricing for waitlist members</p>
+  </div>
+</div>
+
+<!-- Bottom CTA -->
+<div class="bottom-cta">
+  <div class="container">
+    <h2>Stop guessing which feature is over budget</h2>
+    <p style="color:#94a3b8;margin-bottom:2rem">Join the waitlist. First users get 3 months free and influence the roadmap.</p>
+    <form onsubmit="submitWaitlist(event, 'bottom')" id="bottom-form" style="max-width:440px;margin:0 auto">
+      <div class="form-row">
+        <input type="email" name="email" placeholder="you@yourcompany.com" required>
+        <button type="submit" id="bottom-btn">Get early access →</button>
+      </div>
+      <div class="form-msg" id="bottom-msg"></div>
+    </form>
+    <p style="margin-top:1.5rem;font-size:0.85rem;color:#475569">
+      <a href="https://lior-seats.github.io/llm-cost-calculator/">Calculate your current LLM costs →</a>
+    </p>
+  </div>
+</div>
+
+<footer>
+  © 2026 LLMWatch ·
+  <a href="https://lior-seats.github.io/llm-cost-calculator/">LLM Cost Calculator</a>
+</footer>
+
+<script>
+async function submitWaitlist(e, slot) {
+  e.preventDefault();
+  const form = e.target;
+  const suffix = slot === 'bottom' ? 'bottom' : 'hero';
+  const email = form.querySelector('input[type="email"]').value.trim();
+  const btn = document.getElementById(suffix + '-btn');
+  const msg = document.getElementById(suffix + '-msg');
+  btn.textContent = 'Joining…'; btn.disabled = true;
+  try {
+    const res = await fetch('https://agent-control-plane-w3m9.onrender.com/api/waitlist', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, source: 'llmwatch' })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      msg.style.color = '#34d399'; msg.textContent = '✓ You\'re on the list! We\'ll be in touch.';
+      form.querySelector('input').value = ''; btn.textContent = 'Joined ✓';
+    } else { throw new Error(); }
+  } catch { msg.style.color = '#f87171'; msg.textContent = 'Something went wrong. Try again.'; btn.textContent = 'Join waitlist →'; btn.disabled = false; }
+}
+
+// Hit counter
+(function(){try{fetch('https://agent-control-plane-w3m9.onrender.com/api/hit?page=llmwatch-waitlist',{mode:'no-cors'}).catch(()=>{});}catch(e){}})();
+</script>
+</body>
+</html>
