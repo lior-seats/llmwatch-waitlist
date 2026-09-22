@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Why Your LLM API Bill Is Unpredictable (And How to Fix It)</title>
+  <meta name="description" content="LLM API costs spike without warning because billing is opaque by default. Here's how to add real-time cost monitoring and per-feature attribution to your app.">
+  <meta property="og:title" content="Why Your LLM API Bill Is Unpredictable (And How to Fix It)">
+  <meta property="og:description" content="OpenAI and Anthropic billing lacks per-feature visibility. Learn how to instrument your LLM calls to catch cost spikes before your invoice arrives.">
+  <meta property="og:url" content="https://lior-seats.github.io/llmwatch-waitlist/blog/llm-api-cost-monitoring.html">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://lior-seats.github.io/llmwatch-waitlist/blog/llm-api-cost-monitoring.html">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0f; color: #e2e8f0; line-height: 1.7; }
+    a { color: #a78bfa; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .header { background: #0d0d1a; border-bottom: 1px solid #1e1e3a; padding: 1rem 1.5rem; }
+    .header a { color: #a78bfa; font-weight: 600; font-size: 0.95rem; }
+    .container { max-width: 720px; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
+    .meta { font-size: 0.8rem; color: #7c3aed; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; margin-bottom: 1rem; }
+    h1 { font-size: 2.2rem; font-weight: 800; line-height: 1.25; color: #f7fafc; margin-bottom: 1rem; }
+    .subtitle { font-size: 1.1rem; color: #94a3b8; margin-bottom: 2.5rem; border-bottom: 1px solid #1e1e3a; padding-bottom: 2rem; }
+    h2 { font-size: 1.45rem; font-weight: 700; color: #f7fafc; margin: 2.5rem 0 1rem; }
+    h3 { font-size: 1.1rem; font-weight: 600; color: #e2e8f0; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1.1rem; color: #cbd5e1; }
+    ul, ol { padding-left: 1.4rem; margin-bottom: 1.1rem; }
+    li { margin-bottom: 0.4rem; color: #cbd5e1; }
+    code { background: #1a1030; border: 1px solid #3b1d6b; border-radius: 4px; padding: 0.15em 0.4em; font-size: 0.88em; color: #c4b5fd; font-family: 'Fira Code', Consolas, monospace; }
+    pre { background: #111120; border: 1px solid #2d2050; border-radius: 8px; padding: 1.25rem; overflow-x: auto; margin: 1.25rem 0; }
+    pre code { background: none; border: none; padding: 0; font-size: 0.85rem; color: #c4b5fd; }
+    .callout { background: #12102a; border-left: 3px solid #7c3aed; border-radius: 0 8px 8px 0; padding: 1rem 1.25rem; margin: 1.5rem 0; }
+    .callout p { margin: 0; font-size: 0.95rem; }
+    .scenario { background: #0d0d1a; border: 1px solid #1e1e3a; border-radius: 10px; padding: 1.25rem 1.5rem; margin: 1.5rem 0; }
+    .scenario h3 { margin-top: 0; color: #a78bfa; }
+    table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; }
+    th { background: #12102a; color: #a78bfa; font-weight: 700; padding: 0.6rem 0.8rem; text-align: left; border-bottom: 2px solid #3b1d6b; }
+    td { padding: 0.55rem 0.8rem; border-bottom: 1px solid #1e1e3a; color: #cbd5e1; }
+    tr:last-child td { border-bottom: none; }
+    .cta { background: linear-gradient(135deg, #12102a 0%, #1a1040 100%); border: 1px solid #3b1d6b; border-radius: 12px; padding: 2rem; margin-top: 3rem; text-align: center; }
+    .cta h3 { font-size: 1.2rem; color: #f7fafc; margin-bottom: 0.5rem; }
+    .cta p { font-size: 0.95rem; color: #94a3b8; margin-bottom: 1.25rem; }
+    .btn { display: inline-block; background: #7c3aed; color: #fff; font-weight: 700; padding: 0.7rem 1.5rem; border-radius: 7px; font-size: 0.95rem; }
+    .btn:hover { background: #6d28d9; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <a href="https://lior-seats.github.io/llmwatch-waitlist/">← LLMWatch</a>
+  </div>
+  <div class="container">
+    <div class="meta">LLM API Monitoring · September 2026</div>
+    <h1>Why Your LLM API Bill Is Unpredictable (And How to Fix It)</h1>
+    <p class="subtitle">You ship a feature that uses GPT-4o. Three weeks later you have a $2,000 bill and no idea which feature caused it. This is a solvable problem — it just requires instrumentation that OpenAI doesn't provide by default.</p>
+
+    <h2>The visibility gap in LLM billing</h2>
+    <p>OpenAI's billing dashboard gives you total spend per day. Anthropic's is similar. Neither tells you which endpoint, which feature, or which user was responsible for a spike.</p>
+
+    <p>Compare this to how infrastructure costs work. AWS Cost Explorer lets you tag resources and see spend by tag — by service, by environment, by team. CloudWatch gives you per-Lambda invocation metrics. You can pinpoint exactly which part of your system is costing what.</p>
+
+    <p>LLM APIs have no equivalent. You get a daily total, a running monthly total, and a PDF invoice. That's it.</p>
+
+    <div class="callout">
+      <p>This isn't a complaint about OpenAI or Anthropic — it's a gap that exists because LLM API clients are a thin layer: you call an endpoint, you get tokens back, you pay per token. The attribution layer has to be built by the application developer.</p>
+    </div>
+
+    <h2>What happens when you don't monitor</h2>
+
+    <div class="scenario">
+      <h3>Scenario 1: The feature you forgot about</h3>
+      <p>A team ships a "smart search" feature using GPT-4o with a large context window. Traffic is low at launch — $30/month. Six months later, search usage grows 10x. The feature now costs $300/month. Nobody noticed the gradual increase until the quarterly review. The feature was still on GPT-4o because nobody had a reason to revisit it. Switching to GPT-4o-mini (with a tuned prompt) would have saved $250/month with no visible quality difference.</p>
+    </div>
+
+    <div class="scenario">
+      <h3>Scenario 2: The accidentally expensive endpoint</h3>
+      <p>A developer adds an "explain this error" feature to a developer tool. The prompt includes the full stack trace, the surrounding code, and the last 20 log lines — sometimes 8,000 tokens of context. At 500 uses/day, this generates $40/day in input tokens alone. The team didn't realize because there was no per-feature tracking. Total cost to find the bug: the next monthly invoice arriving $1,200 over budget.</p>
+    </div>
+
+    <div class="scenario">
+      <h3>Scenario 3: The runaway batch job</h3>
+      <p>A nightly job summarizes customer support tickets from the previous day using Claude 3.5 Sonnet. A bug causes it to reprocess all historical tickets instead of just the last 24 hours. 180,000 tickets × average 2,000 tokens = 360M tokens. At $3/M input tokens, that's $1,080 — charged overnight. Discovered the next morning. No alert fired.</p>
+    </div>
+
+    <h2>How to add LLM cost monitoring today</h2>
+    <p>The pattern is straightforward: wrap your LLM client calls with a function that records usage and calculates cost before returning the response.</p>
+
+    <h3>Python (OpenAI)</h3>
+    <pre><code>from openai import OpenAI
+import time
+
+client = OpenAI()
+
+# Prices per 1K tokens (update as rates change)
+MODEL_PRICES = {
+    "gpt-4o":       {"input": 0.0025, "output": 0.010},
+    "gpt-4o-mini":  {"input": 0.000150, "output": 0.000600},
+}
+
+def tracked_chat(feature: str, model: str, messages: list, **kwargs):
+    start = time.time()
+    response = client.chat.completions.create(
+        model=model, messages=messages, **kwargs
+    )
+    elapsed = time.time() - start
+    usage = response.usage
+    prices = MODEL_PRICES.get(model, {"input": 0, "output": 0})
+    cost = (usage.prompt_tokens / 1000 * prices["input"] +
+            usage.completion_tokens / 1000 * prices["output"])
+    
+    # Log to your metrics system
+    record_cost(feature=feature, model=model, cost_usd=cost,
+                prompt_tokens=usage.prompt_tokens,
+                completion_tokens=usage.completion_tokens,
+                latency_ms=elapsed * 1000)
+    return response</code></pre>
+
+    <h3>TypeScript (Anthropic)</h3>
+    <pre><code>import Anthropic from "@anthropic-ai/sdk";
+
+const client = new Anthropic();
+
+const MODEL_PRICES: Record<string, { input: number; output: number }> = {
+  "claude-3-5-sonnet-20241022": { input: 0.003, output: 0.015 },
+  "claude-3-haiku-20240307":    { input: 0.00025, output: 0.00125 },
+};
+
+async function trackedMessage(
+  feature: string,
+  params: Anthropic.MessageCreateParamsNonStreaming
+) {
+  const response = await client.messages.create(params);
+  const prices = MODEL_PRICES[params.model] ?? { input: 0, output: 0 };
+  const cost =
+    (response.usage.input_tokens / 1000) * prices.input +
+    (response.usage.output_tokens / 1000) * prices.output;
+
+  recordCost({ feature, model: params.model, costUsd: cost,
+               inputTokens: response.usage.input_tokens,
+               outputTokens: response.usage.output_tokens });
+  return response;
+}</code></pre>
+
+    <h2>What to record and where to store it</h2>
+    <p>At minimum, capture per call: feature name, model, prompt tokens, completion tokens, cost in USD, timestamp. This gives you the raw material to answer questions like:</p>
+    <ul>
+      <li>Which feature accounts for what percentage of total spend?</li>
+      <li>What is the daily cost trend for a specific feature?</li>
+      <li>Which model change saved the most money?</li>
+      <li>Which users are disproportionately expensive to serve?</li>
+    </ul>
+
+    <table>
+      <thead><tr><th>Storage option</th><th>Latency overhead</th><th>Query capability</th><th>Cost</th></tr></thead>
+      <tbody>
+        <tr><td>Postgres (existing DB)</td><td>~2ms</td><td>Full SQL</td><td>Free if you have it</td></tr>
+        <tr><td>ClickHouse (self-hosted)</td><td>~1ms</td><td>Excellent for aggregations</td><td>~$20-40/mo</td></tr>
+        <tr><td>DataDog custom metrics</td><td>~5ms async</td><td>Good dashboards</td><td>$0.05/metric/month</td></tr>
+        <tr><td>Simple JSON log file</td><td>&lt;1ms</td><td>grep + jq</td><td>Free</td></tr>
+      </tbody>
+    </table>
+
+    <p>For most teams starting out, Postgres is the right answer. You almost certainly already have it, the schema is simple, and you can get per-feature aggregations with a single GROUP BY query.</p>
+
+    <h2>Setting up alerts</h2>
+    <p>Once you have per-feature data, alerting is straightforward. The two most useful alert types:</p>
+
+    <h3>Daily spend threshold</h3>
+    <p>Alert when any single feature exceeds a daily cost threshold. A simple cron job running once per hour that queries <code>SUM(cost_usd) WHERE feature = 'X' AND date = today()</code> and fires a Slack message when it exceeds your limit works well at small scale.</p>
+
+    <h3>Cost rate spike (z-score)</h3>
+    <p>Alert when a feature's cost in the current hour is more than 2 standard deviations above its 30-day hourly average. This catches runaway batch jobs and unexpected traffic spikes without requiring you to set manual thresholds for every feature.</p>
+
+    <div class="callout">
+      <p><strong>Try the free calculator:</strong> Before you ship a new LLM feature, estimate its projected cost at your expected traffic volume: <a href="https://lior-seats.github.io/llm-cost-calculator/">LLM Cost Calculator →</a></p>
+    </div>
+
+    <h2>The ongoing maintenance burden</h2>
+    <p>Building this infrastructure yourself is a few days of work — and then an ongoing maintenance burden as model prices change, new models are released, and your feature set grows. You'll need to:</p>
+    <ul>
+      <li>Update price constants when OpenAI or Anthropic changes rates</li>
+      <li>Add new models to the price table as you adopt them</li>
+      <li>Maintain the storage schema as you add new tracking dimensions</li>
+      <li>Keep the alert thresholds calibrated as your traffic scales</li>
+    </ul>
+    <p>This is solved infrastructure. The building blocks are simple enough that most teams do build it themselves — but it's the kind of work that lives in a maintenance purgatory once it's deployed.</p>
+
+    <div class="cta">
+      <h3>LLMWatch: per-feature LLM cost attribution out of the box</h3>
+      <p>One-line SDK wraps your OpenAI and Anthropic clients. Real-time dashboard shows cost by feature, user, and endpoint. Threshold alerts before your bill arrives.</p>
+      <a class="btn" href="https://lior-seats.github.io/llmwatch-waitlist/">Join the LLMWatch waitlist →</a>
+    </div>
+  </div>
+  <script>
+    (function(){ fetch('https://agent-control-plane-w3m9.onrender.com/api/hit?page=blog-llmwatch-cost-monitoring'); })();
+  </script>
+</body>
+</html>

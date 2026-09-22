@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How to Reduce Your OpenAI API Costs: A Practical Guide (2026)</title>
+  <meta name="description" content="Practical techniques to cut OpenAI and Anthropic API bills: model selection, token optimization, caching, and per-feature cost attribution. Real numbers included.">
+  <meta property="og:title" content="How to Reduce Your OpenAI API Costs: A Practical Guide">
+  <meta property="og:description" content="Cut your LLM API bill without sacrificing quality. Token optimization, smart model selection, caching strategies, and cost attribution by feature.">
+  <meta property="og:url" content="https://lior-seats.github.io/llmwatch-waitlist/blog/openai-api-cost-optimization.html">
+  <meta property="og:type" content="article">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://lior-seats.github.io/llmwatch-waitlist/blog/openai-api-cost-optimization.html">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a0f; color: #e2e8f0; line-height: 1.7; }
+    a { color: #a78bfa; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .header { background: #0d0d1a; border-bottom: 1px solid #1e1e3a; padding: 1rem 1.5rem; }
+    .header a { color: #a78bfa; font-weight: 600; font-size: 0.95rem; }
+    .container { max-width: 720px; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
+    .meta { font-size: 0.8rem; color: #7c3aed; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; margin-bottom: 1rem; }
+    h1 { font-size: 2.2rem; font-weight: 800; line-height: 1.25; color: #f7fafc; margin-bottom: 1rem; }
+    .subtitle { font-size: 1.1rem; color: #94a3b8; margin-bottom: 2.5rem; border-bottom: 1px solid #1e1e3a; padding-bottom: 2rem; }
+    h2 { font-size: 1.45rem; font-weight: 700; color: #f7fafc; margin: 2.5rem 0 1rem; }
+    h3 { font-size: 1.1rem; font-weight: 600; color: #e2e8f0; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1.1rem; color: #cbd5e1; }
+    ul, ol { padding-left: 1.4rem; margin-bottom: 1.1rem; }
+    li { margin-bottom: 0.4rem; color: #cbd5e1; }
+    code { background: #1a1030; border: 1px solid #3b1d6b; border-radius: 4px; padding: 0.15em 0.4em; font-size: 0.88em; color: #c4b5fd; font-family: 'Fira Code', Consolas, monospace; }
+    pre { background: #111120; border: 1px solid #2d2050; border-radius: 8px; padding: 1.25rem; overflow-x: auto; margin: 1.25rem 0; }
+    pre code { background: none; border: none; padding: 0; font-size: 0.85rem; color: #c4b5fd; }
+    .callout { background: #12102a; border-left: 3px solid #7c3aed; border-radius: 0 8px 8px 0; padding: 1rem 1.25rem; margin: 1.5rem 0; }
+    .callout p { margin: 0; font-size: 0.95rem; }
+    table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; }
+    th { background: #12102a; color: #a78bfa; font-weight: 700; padding: 0.6rem 0.8rem; text-align: left; border-bottom: 2px solid #3b1d6b; }
+    td { padding: 0.55rem 0.8rem; border-bottom: 1px solid #1e1e3a; color: #cbd5e1; }
+    tr:last-child td { border-bottom: none; }
+    .cta { background: linear-gradient(135deg, #12102a 0%, #1a1040 100%); border: 1px solid #3b1d6b; border-radius: 12px; padding: 2rem; margin-top: 3rem; text-align: center; }
+    .cta h3 { font-size: 1.2rem; color: #f7fafc; margin-bottom: 0.5rem; }
+    .cta p { font-size: 0.95rem; color: #94a3b8; margin-bottom: 1.25rem; }
+    .btn { display: inline-block; background: #7c3aed; color: #fff; font-weight: 700; padding: 0.7rem 1.5rem; border-radius: 7px; font-size: 0.95rem; }
+    .btn:hover { background: #6d28d9; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <a href="https://lior-seats.github.io/llmwatch-waitlist/">← LLMWatch</a>
+  </div>
+  <div class="container">
+    <div class="meta">LLM Cost Optimization · September 2026</div>
+    <h1>How to Reduce Your OpenAI API Costs: A Practical Guide</h1>
+    <p class="subtitle">You've been getting billed for tokens you don't need. Here's how to cut your LLM API spend without touching your quality bar — and how to find which feature is actually responsible for the bill.</p>
+
+    <h2>1. Know where your money is going (this is harder than it sounds)</h2>
+    <p>Before you can optimize, you need attribution. OpenAI's billing dashboard shows total spend by day. It does <em>not</em> tell you whether it's your AI search box, your document summarizer, or your customer support bot that's causing the spike.</p>
+    <p>This is the most common situation: a team ships three LLM-powered features, the monthly bill jumps from $200 to $1,800, and nobody knows which feature to look at first.</p>
+
+    <div class="callout">
+      <p><strong>Key insight:</strong> Most LLM cost problems are attribution problems first, optimization problems second. You can't optimize what you can't see.</p>
+    </div>
+
+    <p>The practical way to get attribution today is to instrument each feature with a cost-tracking wrapper around your OpenAI or Anthropic client. We'll look at how to do this below, and we'll also cover a free calculator to estimate costs before they happen.</p>
+
+    <h2>2. Model selection: the single highest-leverage decision</h2>
+    <p>The spread between the cheapest and most expensive models is roughly 30-50x. Getting model selection right often matters more than all other optimizations combined.</p>
+
+    <table>
+      <thead><tr><th>Model</th><th>Input (per 1M tokens)</th><th>Output (per 1M tokens)</th><th>Best for</th></tr></thead>
+      <tbody>
+        <tr><td>GPT-4o-mini</td><td>$0.15</td><td>$0.60</td><td>Classification, simple extraction, routing</td></tr>
+        <tr><td>Claude 3 Haiku</td><td>$0.25</td><td>$1.25</td><td>Fast, simple tasks; high-volume pipelines</td></tr>
+        <tr><td>Claude 3.5 Haiku</td><td>$0.80</td><td>$4.00</td><td>Balanced capability/cost; medium complexity</td></tr>
+        <tr><td>GPT-4o</td><td>$2.50</td><td>$10.00</td><td>Complex reasoning, multi-step tasks</td></tr>
+        <tr><td>Claude 3.5 Sonnet</td><td>$3.00</td><td>$15.00</td><td>Nuanced tasks, coding, long documents</td></tr>
+        <tr><td>Gemini 1.5 Flash</td><td>$0.075</td><td>$0.30</td><td>Ultra-high volume, batch workloads</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Practical rule: use the weakest model that passes your quality bar</h3>
+    <p>For a feature doing sentiment classification on support tickets, GPT-4o-mini at $0.15/M input tokens is almost certainly sufficient. Using GPT-4o for this costs 16x more with no meaningful quality improvement.</p>
+    <p>Establish a small labeled eval set for each feature (even 50 examples), run both models, and pick the cheaper one that meets your threshold. Most teams skip this step and default to the most powerful model.</p>
+
+    <h2>3. Token optimization: cut waste before it becomes spend</h2>
+
+    <h3>Trim system prompts aggressively</h3>
+    <p>System prompts run on every request. A bloated 2,000-token system prompt costs $0.005 per request at GPT-4o rates. At 10,000 requests/day that's $50/day, $1,500/month — from the system prompt alone.</p>
+    <p>Audit your system prompts. Remove examples that could live in few-shot user messages instead. Remove repetitive instructions. Remove boilerplate. Aim for the minimum that preserves behavior.</p>
+
+    <h3>Cache aggressively at the application layer</h3>
+    <p>Many LLM calls are semantically identical. A RAG system answering "what is your return policy?" for the 500th time doesn't need to hit the model. Cache by embedding similarity (cosine threshold ~0.95) with a simple vector store.</p>
+    <p>Teams using semantic caching routinely report 30-60% reduction in LLM API calls for support and FAQ use cases.</p>
+
+    <h3>Use structured output to reduce completion tokens</h3>
+    <p>Verbose prose completions are expensive. If you're extracting structured data, use JSON mode or function calling and specify exactly the fields you need. A classification that returns <code>{"category": "billing"}</code> costs far less than one that returns three sentences explaining the classification.</p>
+
+    <h3>Chunk documents at the retrieval layer, not the completion layer</h3>
+    <p>For RAG workloads, retrieve only the relevant chunks (typically top-3 to top-5), not entire documents. An aggressive chunking strategy that keeps chunks under 512 tokens and retrieves only high-similarity results can reduce context window usage by 40-70%.</p>
+
+    <h2>4. Use the OpenAI Batch API for non-realtime workloads</h2>
+    <p>OpenAI's Batch API (and Anthropic's equivalent) processes requests asynchronously with a 24h SLA and costs 50% of the synchronous API. Any workload that can tolerate latency — document classification, bulk summarization, overnight processing jobs — should use the batch endpoint. This is a direct 2x cost reduction for applicable workloads.</p>
+
+    <h2>5. Measure the impact of every change</h2>
+    <p>Without per-feature attribution, you can't tell if an optimization worked. You'll make changes, see a slight decrease in the aggregate bill, and not know whether it was your optimization or just lower traffic.</p>
+
+    <p>The simplest instrumentation approach:</p>
+
+    <pre><code>import openai
+
+def tracked_completion(feature_name: str, **kwargs):
+    response = openai.chat.completions.create(**kwargs)
+    usage = response.usage
+    cost = (usage.prompt_tokens / 1000) * INPUT_PRICE + \
+           (usage.completion_tokens / 1000) * OUTPUT_PRICE
+    log_cost(feature_name, cost, usage.prompt_tokens, usage.completion_tokens)
+    return response</code></pre>
+
+    <p>Call it as <code>tracked_completion("search-feature", model="gpt-4o-mini", messages=[...])</code> and you immediately have per-feature cost breakdown.</p>
+
+    <div class="callout">
+      <p><strong>Use the LLM Cost Calculator</strong> to estimate costs before writing a single line of code: <a href="https://lior-seats.github.io/llm-cost-calculator/">lior-seats.github.io/llm-cost-calculator</a> — enter your token estimates and request volume to see projected daily/monthly/annual spend across all major models.</p>
+    </div>
+
+    <h2>6. Set spend alerts before you need them</h2>
+    <p>Both OpenAI and Anthropic have billing alerts, but they're account-level. By the time your account-level alert fires, you already have a problem. Feature-level alerts — "alert me when the search feature exceeds $50/day" — are more actionable.</p>
+    <p>If you're tracking costs at the feature level (see the instrumentation snippet above), you can add a simple threshold check that fires an alert before the feature goes off the rails.</p>
+
+    <h2>Summary: the optimization priority order</h2>
+    <ol>
+      <li><strong>Get attribution first</strong> — you can't optimize what you can't see</li>
+      <li><strong>Right-size your models</strong> — 16-30x cost difference between GPT-4o-mini and GPT-4o</li>
+      <li><strong>Use Batch API</strong> for non-realtime workloads (50% discount)</li>
+      <li><strong>Cache semantic duplicates</strong> at the application layer</li>
+      <li><strong>Trim system prompts</strong> — they run on every request</li>
+      <li><strong>Use structured output</strong> to reduce completion token bloat</li>
+      <li><strong>Set feature-level alerts</strong> before problems compound</li>
+    </ol>
+
+    <div class="cta">
+      <h3>Want per-feature LLM cost attribution automatically?</h3>
+      <p>LLMWatch instruments your OpenAI and Anthropic calls to show real-time cost breakdown by feature, endpoint, and user — with threshold alerts before the bill arrives.</p>
+      <a class="btn" href="https://lior-seats.github.io/llmwatch-waitlist/">Join the LLMWatch waitlist →</a>
+    </div>
+  </div>
+  <script>
+    (function(){ fetch('https://agent-control-plane-w3m9.onrender.com/api/hit?page=blog-llmwatch-cost-optimization'); })();
+  </script>
+</body>
+</html>
